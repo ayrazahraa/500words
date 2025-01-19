@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphabet Bubbles - Learning Levels</title>
+    <style>
+        /* Previous styles remain the same, adding new styles for levels */
+        .level-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+
+        .level-complete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .word-list {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 2;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 150px;
+        }
+
+        .word-item {
+            padding: 5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .word-item.completed {
+            color: #16a34a;
+            text-decoration: line-through;
+        }
+
+        .stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Previous HTML structure remains, adding new elements -->
+    <div class="game-container">
+        <div class="header">
+            <h1>Alphabet Bubbles</h1>
+            <p>Master 500 words across 50 levels!</p>
+        </div>
+        <div class="level-display">Level: <span id="currentLevel">1</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="score-display">Score: <span id="score">0</span></div>
+        <div class="word-display" id="currentWord"></div>
+        <div class="progress-word" id="progressWord"></div>
+        <div class="word-list" id="wordList"></div>
+        <div class="stats" id="stats">
+            Words Mastered: <span id="wordsMastered">0</span>/500
+        </div>
+        <div class="bubble-container" id="bubbleContainer"></div>
+        <div class="level-complete" id="levelComplete">
+            <h2>Level Complete!</h2>
+            <p>Words Mastered: <span id="levelWordsMastered">0</span>/10</p>
+            <button class="retry-button" onclick="nextLevel()">Next Level</button>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>Game Complete!</h2>
+            <p>Congratulations! You've mastered 500 words!</p>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button class="retry-button" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Organized word list by levels (simplified example - extend to 500 words)
+        const levelWords = {
+            1: ['CAT', 'DOG', 'PIG', 'COW', 'HEN', 'RAT', 'BAT', 'FOX', 'OWL', 'BEE'],
+            2: ['SUN', 'SKY', 'DAY', 'MAP', 'BOX', 'CUP', 'PEN', 'BAG', 'HAT', 'CAP'],
+            // ... Add more levels up to 50
+            50: ['YOUTH', 'WAGON', 'VAULT', 'QUICK', 'PRIZE', 'OLIVE', 'NOBLE', 'MERIT', 'LOGIC', 'KNACK']
+        };
+
+        let currentLevel = 1;
+        let currentLevelWords = new Set();
+        let completedWords = new Set();
+        let totalWordsMastered = 0;
+
+        function initializeLevel(level) {
+            currentLevelWords = new Set(levelWords[level]);
+            completedWords.clear();
+            updateWordList();
+            updateProgress();
+            generateNewWord();
+        }
+
+        function updateWordList() {
+            const wordList = document.getElementById('wordList');
+            wordList.innerHTML = '';
+            
+            currentLevelWords.forEach(word => {
+                const div = document.createElement('div');
+                div.className = `word-item ${completedWords.has(word) ? 'completed' : ''}`;
+                div.textContent = word;
+                wordList.appendChild(div);
+            });
+        }
+
+        function updateProgress() {
+            const progress = (completedWords.size / currentLevelWords.size) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('wordsMastered').textContent = totalWordsMastered;
+            document.getElementById('currentLevel').textContent = currentLevel;
+        }
+
+        function generateNewWord() {
+            const remainingWords = Array.from(currentLevelWords).filter(word => !completedWords.has(word));
+            if (remainingWords.length === 0) {
+                completedLevel();
+                return;
+            }
+            currentWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+            document.getElementById('currentWord').textContent = currentWord;
+            progressWord = '';
+            updateProgressDisplay();
+        }
+
+        function handleWordComplete() {
+            completedWords.add(currentWord);
+            totalWordsMastered++;
+            updateWordList();
+            updateProgress();
+            
+            if (completedWords.size === currentLevelWords.size) {
+                completedLevel();
+            } else {
+                generateNewWord();
+            }
+        }
+
+        function completedLevel() {
+            document.getElementById('levelComplete').style.display = 'flex';
+            document.getElementById('levelWordsMastered').textContent = completedWords.size;
+            
+            if (currentLevel === 50) {
+                document.getElementById('gameOver').style.display = 'flex';
+                document.getElementById('finalScore').textContent = score;
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            document.getElementById('levelComplete').style.display = 'none';
+            initializeLevel(currentLevel);
+        }
+
+        // Modified handleBubbleClick to include word completion
+        function handleBubbleClick(bubbleElement, letter) {
+            const expectedLetter = currentWord[progressWord.length];
+            const rect = bubbleElement.getBoundingClientRect();
+            
+            if (letter === expectedLetter) {
+                bubbleElement.classList.add('correct');
+                progressWord += letter;
+                updateProgressDisplay();
+                updateScore(10, rect.left, rect.top);
+                
+                activeBubbles = activeBubbles.filter(b => b.element !== bubbleElement);
+                bubbleElement.remove();
+                
+                if (progressWord === currentWord) {
+                    handleWordComplete();
+                }
+            } else {
+                bubbleElement.classList.add('wrong');
+                updateScore(-5, rect.left, rect.top);
+                setTimeout(() => {
+                    bubbleElement.classList.remove('wrong');
+                }, 500);
+            }
+        }
+
+        // Start game with level 1
+        initializeLevel(1);
+        gameLoop();
+    </script>
+</body>
+</html>
