@@ -1,343 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving Alphabet Bubbles</title>
+    <title>Memory Game</title>
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(180deg, #e0f2fe, #bfdbfe);
-            overflow: hidden;
-        }
-
-        .game-container {
-            width: 90%;
-            max-width: 800px;
-            height: 600px;
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            z-index: 2;
-            position: relative;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .score-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-            z-index: 2;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .word-display {
-            text-align: center;
-            font-size: 2em;
-            margin: 20px 0;
-            color: #2563eb;
-            font-weight: bold;
-            z-index: 2;
-            position: relative;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .progress-word {
-            text-align: center;
-            font-size: 1.5em;
-            margin: 20px 0;
-            letter-spacing: 0.5em;
-            min-height: 1.5em;
-            z-index: 2;
-            position: relative;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .progress-word span {
+        .card {
+            width: 100px;
+            height: 100px;
+            background: #ddd;
             display: inline-block;
-            width: 30px;
-            margin: 0 5px;
-            border-bottom: 2px solid #2563eb;
-        }
-
-        .bubble-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
-        }
-
-        .bubble {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid #3b82f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
+            margin: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
         }
-
-        .bubble:hover {
-            transform: scale(1.1);
-            background: #eff6ff;
-        }
-
-        .bubble.correct {
-            background: #86efac;
-            border-color: #166534;
-        }
-
-        .bubble.wrong {
-            background: #fca5a5;
-            border-color: #991b1b;
-        }
-
-        .score-change {
-            position: absolute;
-            color: red;
-            font-weight: bold;
-            animation: fadeUp 1s forwards;
-            z-index: 3;
-        }
-
-        @keyframes fadeUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-        }
-
-        .game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 10;
-        }
-
-        .retry-button {
-            padding: 10px 20px;
-            font-size: 1.2em;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .retry-button:hover {
-            background: #2563eb;
+        .flipped {
+            background: #ff0;
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <h1>Alphabet Bubbles</h1>
-            <p>Catch the letters in order to spell the word!</p>
-        </div>
-        <div class="score-display">Score: <span id="score">0</span></div>
-        <div class="word-display" id="currentWord"></div>
-        <div class="progress-word" id="progressWord"></div>
-        <div class="bubble-container" id="bubbleContainer"></div>
-        <div class="game-over" id="gameOver">
-            <h2>Game Over!</h2>
-            <p>Final Score: <span id="finalScore">0</span></p>
-            <button class="retry-button" onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
-
+    <div id="game-board"></div>
     <script>
-        const words = [
-            'CAT', 'DOG', 'BAT', 'PIG', 'COW',
-            'RAT', 'HAT', 'MAT', 'SUN', 'BED'
-        ];
+        const cards = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D']; // Example
+        cards.sort(() => Math.random() - 0.5); // Shuffle
 
-        let currentWord = '';
-        let progressWord = '';
-        let score = 0;
-        let activeBubbles = [];
-        let gameInterval;
-        let isGameActive = true;
+        const board = document.getElementById('game-board');
+        cards.forEach((card, index) => {
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('card');
+            cardElement.dataset.value = card;
+            board.appendChild(cardElement);
 
-        function showScoreChange(x, y, amount) {
-            const scoreChange = document.createElement('div');
-            scoreChange.className = 'score-change';
-            scoreChange.textContent = amount > 0 ? `+${amount}` : amount;
-            scoreChange.style.left = `${x}px`;
-            scoreChange.style.top = `${y}px`;
-            document.querySelector('.game-container').appendChild(scoreChange);
-            
-            setTimeout(() => scoreChange.remove(), 1000);
-        }
-
-        function updateScore(change, x, y) {
-            score += change;
-            if (score < 0) score = 0;
-            document.getElementById('score').textContent = score;
-            showScoreChange(x, y, change);
-        }
-
-        function createBubble(letter) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            bubble.textContent = letter;
-            
-            // Start from bottom at random x position
-            const x = Math.random() * (document.querySelector('.bubble-container').offsetWidth - 60);
-            bubble.style.left = `${x}px`;
-            bubble.style.bottom = '-60px';
-            
-            bubble.addEventListener('click', () => handleBubbleClick(bubble, letter));
-            
-            return {
-                element: bubble,
-                x: x,
-                y: document.querySelector('.bubble-container').offsetHeight,
-                speed: 1 + Math.random() * 0.5, // Random speed between 1 and 1.5
-                letter: letter
-            };
-        }
-
-        function updateProgressDisplay() {
-            const progressDiv = document.getElementById('progressWord');
-            progressDiv.innerHTML = '';
-            
-            for (let i = 0; i < currentWord.length; i++) {
-                const span = document.createElement('span');
-                span.textContent = progressWord[i] || '_';
-                progressDiv.appendChild(span);
-            }
-        }
-
-        function generateNewRound() {
-            const bubbleContainer = document.getElementById('bubbleContainer');
-            bubbleContainer.innerHTML = '';
-            activeBubbles = [];
-            
-            currentWord = words[Math.floor(Math.random() * words.length)];
-            progressWord = '';
-            
-            document.getElementById('currentWord').textContent = currentWord;
-            updateProgressDisplay();
-        }
-
-        function handleBubbleClick(bubbleElement, letter) {
-            const expectedLetter = currentWord[progressWord.length];
-            const rect = bubbleElement.getBoundingClientRect();
-            
-            if (letter === expectedLetter) {
-                bubbleElement.classList.add('correct');
-                progressWord += letter;
-                updateProgressDisplay();
-                updateScore(10, rect.left, rect.top);
-                
-                // Remove the bubble from active bubbles
-                activeBubbles = activeBubbles.filter(b => b.element !== bubbleElement);
-                bubbleElement.remove();
-                
-                if (progressWord === currentWord) {
-                    generateNewRound();
-                }
-            } else {
-                bubbleElement.classList.add('wrong');
-                updateScore(-5, rect.left, rect.top);
-                setTimeout(() => {
-                    bubbleElement.classList.remove('wrong');
-                }, 500);
-            }
-        }
-
-        function gameLoop() {
-            if (!isGameActive) return;
-
-            // Add new bubble occasionally
-            if (Math.random() < 0.02) {
-                const currentWordLetters = currentWord.split('');
-                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                const letter = Math.random() < 0.6 ? 
-                    currentWordLetters[Math.floor(Math.random() * currentWordLetters.length)] :
-                    alphabet[Math.floor(Math.random() * alphabet.length)];
-                
-                const bubble = createBubble(letter);
-                document.getElementById('bubbleContainer').appendChild(bubble.element);
-                activeBubbles.push(bubble);
-            }
-
-            // Update bubble positions
-            activeBubbles.forEach((bubble, index) => {
-                bubble.y -= bubble.speed;
-                bubble.element.style.transform = `translateY(${-bubble.y}px)`;
-
-                // Check if bubble has reached the top
-                if (bubble.y > document.querySelector('.bubble-container').offsetHeight + 60) {
-                    // If missed required letter, deduct points
-                    if (bubble.letter === currentWord[progressWord.length]) {
-                        updateScore(-5, bubble.x, 0);
-                    }
-                    bubble.element.remove();
-                    activeBubbles.splice(index, 1);
-                }
+            cardElement.addEventListener('click', () => {
+                cardElement.textContent = card;
+                cardElement.classList.add('flipped');
+                // Add logic for matching and scoring here
             });
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function restartGame() {
-            score = 0;
-            document.getElementById('score').textContent = score;
-            document.getElementById('gameOver').style.display = 'none';
-            isGameActive = true;
-            generateNewRound();
-            gameLoop();
-        }
-
-        // Start the game
-        generateNewRound();
-        gameLoop();
+        });
     </script>
 </body>
 </html>
