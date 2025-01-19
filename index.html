@@ -1,40 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Game</title>
-    <style>
-        .card {
-            width: 100px;
-            height: 100px;
-            background: #ddd;
-            display: inline-block;
-            margin: 10px;
-            cursor: pointer;
-        }
-        .flipped {
-            background: #ff0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>Memory Game</h1>
     <div id="game-board"></div>
-    <script>
-        const cards = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D']; // Example
-        cards.sort(() => Math.random() - 0.5); // Shuffle
-
-        const board = document.getElementById('game-board');
-        cards.forEach((card, index) => {
-            const cardElement = document.createElement('div');
-            cardElement.classList.add('card');
-            cardElement.dataset.value = card;
-            board.appendChild(cardElement);
-
-            cardElement.addEventListener('click', () => {
-                cardElement.textContent = card;
-                cardElement.classList.add('flipped');
-                // Add logic for matching and scoring here
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
