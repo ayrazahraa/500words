@@ -3,13 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alphabet Bubbles - Learning Levels</title>
+    <title>Moving Alphabet Bubbles</title>
     <style>
-        /* Previous styles remain the same, adding new styles for levels */
-        .level-display {
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #e0f2fe, #bfdbfe);
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            height: 600px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 2;
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .score-display {
             position: absolute;
             top: 20px;
-            left: 20px;
+            right: 20px;
             font-size: 1.2em;
             font-weight: bold;
             z-index: 2;
@@ -18,25 +50,99 @@
             border-radius: 8px;
         }
 
-        .progress-bar {
-            position: absolute;
-            top: 60px;
-            left: 20px;
-            width: 200px;
-            height: 20px;
-            background: #e5e7eb;
-            border-radius: 10px;
-            overflow: hidden;
+        .word-display {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            color: #2563eb;
+            font-weight: bold;
             z-index: 2;
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: #3b82f6;
-            transition: width 0.3s ease;
+        .progress-word {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            letter-spacing: 0.5em;
+            min-height: 1.5em;
+            z-index: 2;
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        .level-complete {
+        .progress-word span {
+            display: inline-block;
+            width: 30px;
+            margin: 0 5px;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .bubble-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+        }
+
+        .bubble {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bubble:hover {
+            transform: scale(1.1);
+            background: #eff6ff;
+        }
+
+        .bubble.correct {
+            background: #86efac;
+            border-color: #166534;
+        }
+
+        .bubble.wrong {
+            background: #fca5a5;
+            border-color: #991b1b;
+        }
+
+        .score-change {
+            position: absolute;
+            color: red;
+            font-weight: bold;
+            animation: fadeUp 1s forwards;
+            z-index: 3;
+        }
+
+        @keyframes fadeUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .game-over {
             position: absolute;
             top: 0;
             left: 0;
@@ -51,155 +157,114 @@
             z-index: 10;
         }
 
-        .word-list {
-            position: absolute;
-            right: 20px;
-            top: 100px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
+        .retry-button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background: #3b82f6;
+            color: white;
+            border: none;
             border-radius: 8px;
-            z-index: 2;
-            max-height: 200px;
-            overflow-y: auto;
-            width: 150px;
+            cursor: pointer;
+            margin-top: 20px;
         }
 
-        .word-item {
-            padding: 5px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .word-item.completed {
-            color: #16a34a;
-            text-decoration: line-through;
-        }
-
-        .stats {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-            z-index: 2;
+        .retry-button:hover {
+            background: #2563eb;
         }
     </style>
 </head>
 <body>
-    <!-- Previous HTML structure remains, adding new elements -->
     <div class="game-container">
         <div class="header">
             <h1>Alphabet Bubbles</h1>
-            <p>Master 500 words across 50 levels!</p>
-        </div>
-        <div class="level-display">Level: <span id="currentLevel">1</span></div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
+            <p>Catch the letters in order to spell the word!</p>
         </div>
         <div class="score-display">Score: <span id="score">0</span></div>
         <div class="word-display" id="currentWord"></div>
         <div class="progress-word" id="progressWord"></div>
-        <div class="word-list" id="wordList"></div>
-        <div class="stats" id="stats">
-            Words Mastered: <span id="wordsMastered">0</span>/500
-        </div>
         <div class="bubble-container" id="bubbleContainer"></div>
-        <div class="level-complete" id="levelComplete">
-            <h2>Level Complete!</h2>
-            <p>Words Mastered: <span id="levelWordsMastered">0</span>/10</p>
-            <button class="retry-button" onclick="nextLevel()">Next Level</button>
-        </div>
         <div class="game-over" id="gameOver">
-            <h2>Game Complete!</h2>
-            <p>Congratulations! You've mastered 500 words!</p>
+            <h2>Game Over!</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
             <button class="retry-button" onclick="restartGame()">Play Again</button>
         </div>
     </div>
 
     <script>
-        // Organized word list by levels (simplified example - extend to 500 words)
-        const levelWords = {
-            1: ['CAT', 'DOG', 'PIG', 'COW', 'HEN', 'RAT', 'BAT', 'FOX', 'OWL', 'BEE'],
-            2: ['SUN', 'SKY', 'DAY', 'MAP', 'BOX', 'CUP', 'PEN', 'BAG', 'HAT', 'CAP'],
-            // ... Add more levels up to 50
-            50: ['YOUTH', 'WAGON', 'VAULT', 'QUICK', 'PRIZE', 'OLIVE', 'NOBLE', 'MERIT', 'LOGIC', 'KNACK']
-        };
+        const words = [
+            'CAT', 'DOG', 'BAT', 'PIG', 'COW',
+            'RAT', 'HAT', 'MAT', 'SUN', 'BED'
+        ];
 
-        let currentLevel = 1;
-        let currentLevelWords = new Set();
-        let completedWords = new Set();
-        let totalWordsMastered = 0;
+        let currentWord = '';
+        let progressWord = '';
+        let score = 0;
+        let activeBubbles = [];
+        let gameInterval;
+        let isGameActive = true;
 
-        function initializeLevel(level) {
-            currentLevelWords = new Set(levelWords[level]);
-            completedWords.clear();
-            updateWordList();
-            updateProgress();
-            generateNewWord();
-        }
-
-        function updateWordList() {
-            const wordList = document.getElementById('wordList');
-            wordList.innerHTML = '';
+        function showScoreChange(x, y, amount) {
+            const scoreChange = document.createElement('div');
+            scoreChange.className = 'score-change';
+            scoreChange.textContent = amount > 0 ? `+${amount}` : amount;
+            scoreChange.style.left = `${x}px`;
+            scoreChange.style.top = `${y}px`;
+            document.querySelector('.game-container').appendChild(scoreChange);
             
-            currentLevelWords.forEach(word => {
-                const div = document.createElement('div');
-                div.className = `word-item ${completedWords.has(word) ? 'completed' : ''}`;
-                div.textContent = word;
-                wordList.appendChild(div);
-            });
+            setTimeout(() => scoreChange.remove(), 1000);
         }
 
-        function updateProgress() {
-            const progress = (completedWords.size / currentLevelWords.size) * 100;
-            document.getElementById('progressFill').style.width = `${progress}%`;
-            document.getElementById('wordsMastered').textContent = totalWordsMastered;
-            document.getElementById('currentLevel').textContent = currentLevel;
+        function updateScore(change, x, y) {
+            score += change;
+            if (score < 0) score = 0;
+            document.getElementById('score').textContent = score;
+            showScoreChange(x, y, change);
         }
 
-        function generateNewWord() {
-            const remainingWords = Array.from(currentLevelWords).filter(word => !completedWords.has(word));
-            if (remainingWords.length === 0) {
-                completedLevel();
-                return;
+        function createBubble(letter) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = letter;
+            
+            // Start from bottom at random x position
+            const x = Math.random() * (document.querySelector('.bubble-container').offsetWidth - 60);
+            bubble.style.left = `${x}px`;
+            bubble.style.bottom = '-60px';
+            
+            bubble.addEventListener('click', () => handleBubbleClick(bubble, letter));
+            
+            return {
+                element: bubble,
+                x: x,
+                y: document.querySelector('.bubble-container').offsetHeight,
+                speed: 1 + Math.random() * 0.5, // Random speed between 1 and 1.5
+                letter: letter
+            };
+        }
+
+        function updateProgressDisplay() {
+            const progressDiv = document.getElementById('progressWord');
+            progressDiv.innerHTML = '';
+            
+            for (let i = 0; i < currentWord.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = progressWord[i] || '_';
+                progressDiv.appendChild(span);
             }
-            currentWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
-            document.getElementById('currentWord').textContent = currentWord;
+        }
+
+        function generateNewRound() {
+            const bubbleContainer = document.getElementById('bubbleContainer');
+            bubbleContainer.innerHTML = '';
+            activeBubbles = [];
+            
+            currentWord = words[Math.floor(Math.random() * words.length)];
             progressWord = '';
+            
+            document.getElementById('currentWord').textContent = currentWord;
             updateProgressDisplay();
         }
 
-        function handleWordComplete() {
-            completedWords.add(currentWord);
-            totalWordsMastered++;
-            updateWordList();
-            updateProgress();
-            
-            if (completedWords.size === currentLevelWords.size) {
-                completedLevel();
-            } else {
-                generateNewWord();
-            }
-        }
-
-        function completedLevel() {
-            document.getElementById('levelComplete').style.display = 'flex';
-            document.getElementById('levelWordsMastered').textContent = completedWords.size;
-            
-            if (currentLevel === 50) {
-                document.getElementById('gameOver').style.display = 'flex';
-                document.getElementById('finalScore').textContent = score;
-            }
-        }
-
-        function nextLevel() {
-            currentLevel++;
-            document.getElementById('levelComplete').style.display = 'none';
-            initializeLevel(currentLevel);
-        }
-
-        // Modified handleBubbleClick to include word completion
         function handleBubbleClick(bubbleElement, letter) {
             const expectedLetter = currentWord[progressWord.length];
             const rect = bubbleElement.getBoundingClientRect();
@@ -210,11 +275,12 @@
                 updateProgressDisplay();
                 updateScore(10, rect.left, rect.top);
                 
+                // Remove the bubble from active bubbles
                 activeBubbles = activeBubbles.filter(b => b.element !== bubbleElement);
                 bubbleElement.remove();
                 
                 if (progressWord === currentWord) {
-                    handleWordComplete();
+                    generateNewRound();
                 }
             } else {
                 bubbleElement.classList.add('wrong');
@@ -225,8 +291,52 @@
             }
         }
 
-        // Start game with level 1
-        initializeLevel(1);
+        function gameLoop() {
+            if (!isGameActive) return;
+
+            // Add new bubble occasionally
+            if (Math.random() < 0.02) {
+                const currentWordLetters = currentWord.split('');
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const letter = Math.random() < 0.6 ? 
+                    currentWordLetters[Math.floor(Math.random() * currentWordLetters.length)] :
+                    alphabet[Math.floor(Math.random() * alphabet.length)];
+                
+                const bubble = createBubble(letter);
+                document.getElementById('bubbleContainer').appendChild(bubble.element);
+                activeBubbles.push(bubble);
+            }
+
+            // Update bubble positions
+            activeBubbles.forEach((bubble, index) => {
+                bubble.y -= bubble.speed;
+                bubble.element.style.transform = `translateY(${-bubble.y}px)`;
+
+                // Check if bubble has reached the top
+                if (bubble.y > document.querySelector('.bubble-container').offsetHeight + 60) {
+                    // If missed required letter, deduct points
+                    if (bubble.letter === currentWord[progressWord.length]) {
+                        updateScore(-5, bubble.x, 0);
+                    }
+                    bubble.element.remove();
+                    activeBubbles.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            score = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('gameOver').style.display = 'none';
+            isGameActive = true;
+            generateNewRound();
+            gameLoop();
+        }
+
+        // Start the game
+        generateNewRound();
         gameLoop();
     </script>
 </body>
